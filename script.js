@@ -29,9 +29,12 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 
         // 🔹 3. Crear estructura con todas las columnas
         let resultado = Object.keys(conteoDias).map(cedula => ({
-            "CENTRO_DE_VINCULACION": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["CENTRO DE VINCULACIÓN"] || "",
+            "FECHA": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["FECHA"] || "",
+            "DIA DE LA SEMANA": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["DIA DE LA SEMANA"] || "",
             "CEDULA INSPECTOR": cedula,
-            "NOMBRE_INSPECTOR": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["NOMBRE INSPECTOR"] || "",
+            "NOMBRE_INSPECTOR": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["NOMBRE_INSPECTOR"] || "",
+            "CENTRO DE COSTOS": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["CENTRO DE COSTOS"] || "",
+            "CENTRO DE VINCULACIÓN": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["CENTRO DE VINCULACIÓN"] || "",
             "Total Dias Laborados": conteoDias[cedula].size,
             "TOTAL_SUSPENSIONES": 0, 
             "TOTAL_INSPECCIONES": 0,
@@ -49,14 +52,15 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
         jsonData.forEach(row => {
             let inspector = resultado.find(ins => ins["CEDULA INSPECTOR"] === row["CEDULA INSPECTOR"]);
             if (inspector) {
-                inspector["TOTAL_INSPECCIONES"] += row["TOTAL_REVISIONES"] || 0;
-                inspector["Total_LM"] += row["LM"] || 0;
-                inspector["TOTAL_SUSPENSIONES"] += row["TOTAL_SUSPENSIONES"] || 0;
+                // ✅ SUMANDO VALORES CORRECTAMENTE
+                inspector["TOTAL_INSPECCIONES"] += row["TOTAL_REVISIONES"] ? parseInt(row["TOTAL_REVISIONES"]) : 0;
+                inspector["Total_LM"] += row["LM"] ? parseInt(row["LM"]) : 0;
+                inspector["TOTAL_SUSPENSIONES"] += row["TOTAL_SUSPENSIONES"] ? parseInt(row["TOTAL_SUSPENSIONES"]) * 3000 : 0;
                 inspector["Auxilio_Moto"] = inspector["Total Dias Laborados"] * 22000;
                 inspector["Bono_Gestion"] = calcularBonoGestion(inspector["TOTAL_INSPECCIONES"]);
                 inspector["Bono_Adicional"] = calcularBonoAdicional(inspector["TOTAL_INSPECCIONES"]);
                 inspector["Bono_Total"] = inspector["Bono_Gestion"] + inspector["Bono_Adicional"];
-                inspector["Auxilio_Suspensiones"] = inspector["TOTAL_SUSPENSIONS"]*3000;
+                inspector["Auxilio_Suspensiones"] = inspector["TOTAL_SUSPENSIONES"];
                 inspector["Auxilio_Total"] = inspector["Auxilio_Moto"] + inspector["Auxilio_Suspensiones"];
                 inspector["Categoria"] = categorizarInspector(inspector["TOTAL_INSPECCIONES"]);
             }
@@ -80,7 +84,7 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
     reader.readAsArrayBuffer(file);
 });
 
-// 🔹 7.1. Funciones auxiliares
+// 🔹 7. Funciones auxiliares
 function calcularBonoGestion(inspecciones) {
     if (inspecciones > 250) return (inspecciones - 160) * 15000;
     else if (inspecciones > 210) return (inspecciones - 160) * 13000;
