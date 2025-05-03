@@ -27,13 +27,13 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
             conteoDias[row["CEDULA INSPECTOR"]].add(row["FECHA"]);
         });
 
-        // Convertir a array estructurado
+        // 🔹 3. Crear estructura con todas las columnas
         let resultado = Object.keys(conteoDias).map(cedula => ({
             "CENTRO_DE_VINCULACION": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["CENTRO DE VINCULACIÓN"] || "",
             "CEDULA INSPECTOR": cedula,
             "NOMBRE_INSPECTOR": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["NOMBRE INSPECTOR"] || "",
             "Total Dias Laborados": conteoDias[cedula].size,
-            "TOTAL_SUSPENSIONES": 0, // Se actualizará más adelante
+            "TOTAL_SUSPENSIONES": 0, 
             "TOTAL_INSPECCIONES": 0,
             "Total_LM": 0,
             "Bono_Gestion": 0,
@@ -45,7 +45,7 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
             "Categoria": ""
         }));
 
-        // 🔹 3. Calcular total de inspecciones y bonificaciones
+        // 🔹 4. Calcular total de inspecciones y bonificaciones
         jsonData.forEach(row => {
             let inspector = resultado.find(ins => ins["CEDULA INSPECTOR"] === row["CEDULA INSPECTOR"]);
             if (inspector) {
@@ -56,18 +56,18 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
                 inspector["Bono_Gestion"] = calcularBonoGestion(inspector["TOTAL_INSPECCIONES"]);
                 inspector["Bono_Adicional"] = calcularBonoAdicional(inspector["TOTAL_INSPECCIONES"]);
                 inspector["Bono_Total"] = inspector["Bono_Gestion"] + inspector["Bono_Adicional"];
-                inspector["Auxilio_Suspensiones"] = inspector["TOTAL_SUSPENSIONES"];
+                inspector["Auxilio_Suspensiones"] = inspector["TOTAL_SUSPENSIONS"];
                 inspector["Auxilio_Total"] = inspector["Auxilio_Moto"] + inspector["Auxilio_Suspensiones"];
                 inspector["Categoria"] = categorizarInspector(inspector["TOTAL_INSPECCIONES"]);
             }
         });
 
-        // 🔹 4. Convertir resultados a archivo Excel
+        // 🔹 5. Generar archivo Excel
         let newSheet = XLSX.utils.json_to_sheet(resultado);
         let newWorkbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(newWorkbook, newSheet, "Liquidacion");
 
-        // 🔹 5. Generar archivo para descargar
+        // 🔹 6. Descargar el archivo
         let excelBuffer = XLSX.write(newWorkbook, {bookType: "xlsx", type: "array"});
         let blob = new Blob([excelBuffer], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
         let link = document.getElementById("downloadLink");
@@ -80,7 +80,7 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
     reader.readAsArrayBuffer(file);
 });
 
-// 🔹 6. Funciones auxiliares
+// 🔹 7.1. Funciones auxiliares
 function calcularBonoGestion(inspecciones) {
     if (inspecciones > 250) return (inspecciones - 160) * 15000;
     else if (inspecciones > 210) return (inspecciones - 160) * 13000;
