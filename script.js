@@ -49,14 +49,14 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
         jsonData.forEach(row => {
             let inspector = resultado.find(ins => ins["CEDULA INSPECTOR"] === row["CEDULA INSPECTOR"]);
             if (inspector) {
-                inspector["TOTAL_INSPECCIONES"] += row["TOTAL REVISIONES"] || 0;
+                inspector["TOTAL_INSPECCIONES"] += row["TOTAL_REVISIONES"] || 0;
                 inspector["Total_LM"] += row["LM"] || 0;
-                inspector["TOTAL_SUSPENSIONES"] += (row["TOTAL SUSPENSIONES"] || 0) * 3000;
+                inspector["TOTAL_SUSPENSIONES"] += row["TOTAL_SUSPENSIONES"] || 0;
                 inspector["Auxilio_Moto"] = inspector["Total Dias Laborados"] * 22000;
                 inspector["Bono_Gestion"] = calcularBonoGestion(inspector["TOTAL_INSPECCIONES"]);
                 inspector["Bono_Adicional"] = calcularBonoAdicional(inspector["TOTAL_INSPECCIONES"]);
                 inspector["Bono_Total"] = inspector["Bono_Gestion"] + inspector["Bono_Adicional"];
-                inspector["Auxilio_Suspensiones"] = inspector["TOTAL_SUSPENSIONS"];
+                inspector["Auxilio_Suspensiones"] = inspector["TOTAL_SUSPENSIONS"]*3000;
                 inspector["Auxilio_Total"] = inspector["Auxilio_Moto"] + inspector["Auxilio_Suspensiones"];
                 inspector["Categoria"] = categorizarInspector(inspector["TOTAL_INSPECCIONES"]);
             }
