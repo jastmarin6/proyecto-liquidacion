@@ -29,21 +29,36 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 
         // Convertir a array estructurado
         let resultado = Object.keys(conteoDias).map(cedula => ({
+            "CENTRO_DE_VINCULACION": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["CENTRO DE VINCULACIÓN"] || "",
             "CEDULA INSPECTOR": cedula,
-            "Total Dias Laborados": conteoDias[cedula].size
+            "NOMBRE_INSPECTOR": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["NOMBRE INSPECTOR"] || "",
+            "Total Dias Laborados": conteoDias[cedula].size,
+            "TOTAL_SUSPENSIONES": 0, // Se actualizará más adelante
+            "TOTAL_INSPECCIONES": 0,
+            "Total_LM": 0,
+            "Bono_Gestion": 0,
+            "Bono_Adicional": 0,
+            "Auxilio_Moto": 0,
+            "Auxilio_Suspensiones": 0,
+            "Bono_Total": 0,
+            "Auxilio_Total": 0,
+            "Categoria": ""
         }));
 
         // 🔹 3. Calcular total de inspecciones y bonificaciones
         jsonData.forEach(row => {
             let inspector = resultado.find(ins => ins["CEDULA INSPECTOR"] === row["CEDULA INSPECTOR"]);
             if (inspector) {
-                inspector["Total Inspecciones"] = (inspector["Total Inspecciones"] || 0) + row["TOTAL REVISIONES"];
-                inspector["Total LM"] = (inspector["Total LM"] || 0) + row["LM"];
-                inspector["Total Suspensiones"] = (inspector["Total Suspensiones"] || 0) + (row["TOTAL SUSPENSIONES"] * 3000);
-                inspector["Auxilio Moto"] = inspector["Total Dias Laborados"] * 22000;
-                inspector["Bono Gestión"] = calcularBonoGestion(inspector["Total Inspecciones"]);
-                inspector["Bono Adicional"] = calcularBonoAdicional(inspector["Total Inspecciones"]);
-                inspector["Categoría"] = categorizarInspector(inspector["Total Inspecciones"]);
+                inspector["TOTAL_INSPECCIONES"] += row["TOTAL REVISIONES"] || 0;
+                inspector["Total_LM"] += row["LM"] || 0;
+                inspector["TOTAL_SUSPENSIONES"] += (row["TOTAL SUSPENSIONES"] || 0) * 3000;
+                inspector["Auxilio_Moto"] = inspector["Total Dias Laborados"] * 22000;
+                inspector["Bono_Gestion"] = calcularBonoGestion(inspector["TOTAL_INSPECCIONES"]);
+                inspector["Bono_Adicional"] = calcularBonoAdicional(inspector["TOTAL_INSPECCIONES"]);
+                inspector["Bono_Total"] = inspector["Bono_Gestion"] + inspector["Bono_Adicional"];
+                inspector["Auxilio_Suspensiones"] = inspector["TOTAL_SUSPENSIONES"];
+                inspector["Auxilio_Total"] = inspector["Auxilio_Moto"] + inspector["Auxilio_Suspensiones"];
+                inspector["Categoria"] = categorizarInspector(inspector["TOTAL_INSPECCIONES"]);
             }
         });
 
