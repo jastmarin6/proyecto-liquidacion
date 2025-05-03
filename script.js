@@ -28,50 +28,51 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
         });
 
         // 🔹 3. Crear estructura con todas las columnas
-        let resultado = Object.keys(conteoDias).map(cedula => ({
-            "FECHA": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["FECHA"] || "",
-            "DIA DE LA SEMANA": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["DIA DE LA SEMANA"] || "",
-            "CEDULA INSPECTOR": cedula,
-            "NOMBRE_INSPECTOR": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["NOMBRE_INSPECTOR"] || "",
-            "CENTRO DE COSTOS": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["CENTRO DE COSTOS"] || "",
-            "CENTRO DE VINCULACIÓN": jsonData.find(row => row["CEDULA INSPECTOR"] === cedula)?.["CENTRO DE VINCULACIÓN"] || "",
-            "Total Dias Laborados": conteoDias[cedula].size,
-            "TOTAL_SUSPENSIONES": 0, 
-            "TOTAL_INSPECCIONES": 0,
-            "Total_LM": 0,
-            "Bono_Gestion": 0,
-            "Bono_Adicional": 0,
-            "Auxilio_Moto": 0,
-            "Auxilio_Suspensiones": 0,
-            "Bono_Total": 0,
-            "Auxilio_Total": 0,
-            "Categoria": ""
-        }));
-
-        // 🔹 4. Calcular total de inspecciones y bonificaciones
+        let resultado = {};
         jsonData.forEach(row => {
-            let inspector = resultado.find(ins => ins["CEDULA INSPECTOR"] === row["CEDULA INSPECTOR"]);
-            if (inspector) {
-                // ✅ SUMANDO VALORES CORRECTAMENTE
-                inspector["TOTAL_INSPECCIONES"] += row["TOTAL_REVISIONES"] ? parseInt(row["TOTAL_REVISIONES"]) : 0;
-                inspector["Total_LM"] += row["LM"] ? parseInt(row["LM"]) : 0;
-                inspector["TOTAL_SUSPENSIONES"] += row["TOTAL_SUSPENSIONES"] ? parseInt(row["TOTAL_SUSPENSIONES"]) * 3000 : 0;
-                inspector["Auxilio_Moto"] = inspector["Total Dias Laborados"] * 22000;
-                inspector["Bono_Gestion"] = calcularBonoGestion(inspector["TOTAL_INSPECCIONES"]);
-                inspector["Bono_Adicional"] = calcularBonoAdicional(inspector["TOTAL_INSPECCIONES"]);
-                inspector["Bono_Total"] = inspector["Bono_Gestion"] + inspector["Bono_Adicional"];
-                inspector["Auxilio_Suspensiones"] = inspector["TOTAL_SUSPENSIONES"];
-                inspector["Auxilio_Total"] = inspector["Auxilio_Moto"] + inspector["Auxilio_Suspensiones"];
-                inspector["Categoria"] = categorizarInspector(inspector["TOTAL_INSPECCIONES"]);
+            let cedula = row["CEDULA INSPECTOR"];
+            if (!resultado[cedula]) {
+                resultado[cedula] = {
+                    "CENTRO_DE_VINCULACION": row["CENTRO DE VINCULACIÓN"] || "",
+                    "CEDULA INSPECTOR": cedula,
+                    "NOMBRE_INSPECTOR": row["NOMBRE_INSPECTOR"] || "",
+                    "Total Dias Laborados": conteoDias[cedula]?.size || 0,
+                    "TOTAL_SUSPENSIONES": 0,
+                    "TOTAL_INSPECCIONES": 0,
+                    "Total_LM": 0,
+                    "Bono_Gestion": 0,
+                    "Bono_Adicional": 0,
+                    "Auxilio_Moto": 0,
+                    "Auxilio_Suspensiones": 0,
+                    "Bono_Total": 0,
+                    "Auxilio_Total": 0,
+                    "Categoria": ""
+                };
             }
+
+            // 🔹 4. Acumular valores correctamente
+            resultado[cedula]["TOTAL_INSPECCIONES"] += parseInt(row["TOTAL_REVISIONES"]) || 0;
+            resultado[cedula]["Total_LM"] += parseInt(row["LM"]) || 0;
+            resultado[cedula]["TOTAL_SUSPENSIONES"] += parseInt(row["TOTAL_SUSPENSIONES"]) * 3000 || 0;
         });
 
-        // 🔹 5. Generar archivo Excel
-        let newSheet = XLSX.utils.json_to_sheet(resultado);
+        // 🔹 5. Calcular bonificaciones y auxilios
+        Object.values(resultado).forEach(inspector => {
+            inspector["Bono_Gestion"] = calcularBonoGestion(inspector["TOTAL_INSPECCIONES"]);
+            inspector["Bono_Adicional"] = calcularBonoAdicional(inspector["TOTAL_INSPECCIONES"]);
+            inspector["Auxilio_Moto"] = inspector["Total Dias Laborados"] * 22000;
+            inspector["Auxilio_Suspensiones"] = inspector["TOTAL_SUSPENSIONES"];
+            inspector["Bono_Total"] = inspector["Bono_Gestion"] + inspector["Bono_Adicional"];
+            inspector["Auxilio_Total"] = inspector["Auxilio_Moto"] + inspector["Auxilio_Suspensiones"];
+            inspector["Categoria"] = categorizarInspector(inspector["TOTAL_INSPECCIONES"]);
+        });
+
+        // 🔹 6. Convertir a formato Excel
+        let newSheet = XLSX.utils.json_to_sheet(Object.values(resultado));
         let newWorkbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(newWorkbook, newSheet, "Liquidacion");
 
-        // 🔹 6. Descargar el archivo
+        // 🔹 7. Descargar el archivo generado
         let excelBuffer = XLSX.write(newWorkbook, {bookType: "xlsx", type: "array"});
         let blob = new Blob([excelBuffer], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
         let link = document.getElementById("downloadLink");
@@ -84,7 +85,7 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
     reader.readAsArrayBuffer(file);
 });
 
-// 🔹 7. Funciones auxiliares
+// 🔹 8. Funciones auxiliares
 function calcularBonoGestion(inspecciones) {
     if (inspecciones > 250) return (inspecciones - 160) * 15000;
     else if (inspecciones > 210) return (inspecciones - 160) * 13000;
