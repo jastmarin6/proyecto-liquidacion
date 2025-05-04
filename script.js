@@ -53,7 +53,7 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
             // 🔹 4. Acumular valores correctamente
             resultado[cedula]["TOTAL_INSPECCIONES"] += parseInt(row["TOTAL_REVISIONES"]) || 0;
             resultado[cedula]["Total_LM"] += parseInt(row["LM"]) || 0;
-            resultado[cedula]["TOTAL_SUSPENSIONES"] += parseInt(row["TOTAL_SUSPENSIONES"]) * 3000 || 0;
+            resultado[cedula]["TOTAL_SUSPENSIONES"] += parseInt(row["TOTAL_SUSPENSIONES"])  || 0;
         });
 
         // 🔹 5. Calcular bonificaciones y auxilios
@@ -61,7 +61,7 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
             inspector["Bono_Gestion"] = calcularBonoGestion(inspector["TOTAL_INSPECCIONES"]);
             inspector["Bono_Adicional"] = calcularBonoAdicional(inspector["TOTAL_INSPECCIONES"]);
             inspector["Auxilio_Moto"] = inspector["Total Dias Laborados"] * 22000;
-            inspector["Auxilio_Suspensiones"] = inspector["TOTAL_SUSPENSIONES"];
+            inspector["Auxilio_Suspensiones"] = inspector["TOTAL_SUSPENSIONES"] * 3000;
             inspector["Bono_Total"] = inspector["Bono_Gestion"] + inspector["Bono_Adicional"];
             inspector["Auxilio_Total"] = inspector["Auxilio_Moto"] + inspector["Auxilio_Suspensiones"];
             inspector["Categoria"] = categorizarInspector(inspector["TOTAL_INSPECCIONES"]);
@@ -87,9 +87,9 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 
 // 🔹 8. Funciones auxiliares
 function calcularBonoGestion(inspecciones) {
-    if (inspecciones > 250) return (inspecciones - 160) * 15000;
-    else if (inspecciones > 210) return (inspecciones - 160) * 13000;
-    else if (inspecciones > 180) return (inspecciones - 160) * 10000;
+    if (inspecciones > 210) return (inspecciones - 160) * 15000;
+    else if (inspecciones > 180) return (inspecciones - 160) * 13000;
+    else if (inspecciones > 160) return (inspecciones - 160) * 10000;
     else return 0;
 }
 
