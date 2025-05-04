@@ -20,7 +20,7 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 
         // 🔹 2. Contar días laborados por cada inspector
         let conteoDias = {};
-        diasLaborados.forEach(row => {
+        jsonData.forEach(row => { 
             if (!conteoDias[row["CEDULA INSPECTOR"]]) {
                 conteoDias[row["CEDULA INSPECTOR"]] = new Set();
             }
@@ -84,7 +84,6 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 
     reader.readAsArrayBuffer(file);
 });
-
 // 🔹 8. Funciones auxiliares
 function calcularBonoGestion(inspecciones) {
     if (inspecciones > 210) return (inspecciones - 160) * 15000;
